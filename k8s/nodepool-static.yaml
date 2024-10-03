@@ -1,0 +1,30 @@
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: default
+spec:
+  template:
+    spec:
+      requirements:
+        - key: kubernetes.io/arch
+          operator: In
+          values: ["amd64"] # Restrict to x86-64 architecture only
+        - key: kubernetes.io/os
+          operator: In
+          values: ["linux"]
+        - key: karpenter.sh/capacity-type # Restrict to a on-demand only
+          operator: In
+          values: ["on-demand"]
+        - key: "node.kubernetes.io/instance-type" # Restrict to a single instance type 
+          operator: In
+          values: ["m5.large"]
+      nodeClassRef:
+        group: karpenter.k8s.aws
+        kind: EC2NodeClass
+        name: default
+  limits:
+    cpu: 192
+    memory: 1024Gi
+  disruption:
+    consolidationPolicy: WhenEmpty # Restrict consolidation to empty nodes only
+    consolidateAfter: 60s

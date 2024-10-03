@@ -4,6 +4,8 @@
 
 data "aws_availability_zones" "available" {}
 
+
+
 ################################################################################
 # Networking: VPC + Subnets + NATGW + RT
 ################################################################################
@@ -56,41 +58,40 @@ module "eks" {
 
   cluster_addons = {
     coredns = {
-      most_recent = true
+      addon_version = "v1.11.3-eksbuild.1"
+      resolve_conflicts = "OVERWRITE"
     }
     kube-proxy = {
-      most_recent = true
+      addon_version = "v1.30.3-eksbuild.9"
+      resolve_conflicts = "OVERWRITE"
     }
     vpc-cni = {
-      most_recent = true
+      addon_version = "v1.18.5-eksbuild.1"
+      resolve_conflicts = "OVERWRITE"
     }
     aws-ebs-csi-driver = {
-      most_recent = true
+      addon_version = "v1.35.0-eksbuild.1"
+      resolve_conflicts = "OVERWRITE"
     }
     snapshot-controller = {
-      most_recent = true
-      configuration_values = jsonencode({
-        tolerations = [
-          {
-            key      = "CriticalAddonsOnly"
-            operator = "Exists"
-          }
-        ]
-      })
+      addon_version = "v8.0.0-eksbuild.1"
+      resolve_conflicts = "OVERWRITE"
     }
     eks-pod-identity-agent = {
-      most_recent = true
+      addon_version = "v1.3.2-eksbuild.2"
+      resolve_conflicts = "OVERWRITE"
     }
   }
 
   eks_managed_node_groups = {
     infra = {
-      ami_type       = "AL2023_ARM_64_STANDARD"
-      instance_types = ["m6g.large"]
+      ami_type                       = "AL2023_x86_64_STANDARD"
+      use_latest_ami_release_version = true
 
-      min_size     = 2
-      max_size     = 3
-      desired_size = 2
+      instance_types = ["m5.large"]
+      min_size       = 2
+      max_size       = 3
+      desired_size   = 2
 
       taints = {
         addons = {
@@ -99,6 +100,7 @@ module "eks" {
           effect = "NO_SCHEDULE"
         },
       }
+
     }
   }
 
@@ -130,6 +132,7 @@ module "eks_blueprints_addons" {
       tolerations:
         - key: "CriticalAddonsOnly"
           operator: "Exists"
+          effect: "NoSchedule"
       EOT
     ]
   }
@@ -140,6 +143,7 @@ module "eks_blueprints_addons" {
       tolerations:
         - key: "CriticalAddonsOnly"
           operator: "Exists"
+          effect: "NoSchedule"
       EOT
     ]
   }
@@ -161,6 +165,21 @@ module "eks_container_insights" {
   enable_amazon_eks_cw_observability         = true
   create_cloudwatch_observability_irsa_role  = true
   create_cloudwatch_application_signals_role = true
+
+  addon_config = {
+    addon_version = "v2.1.1-eksbuild.1"
+    resolve_conflicts = "OVERWRITE"
+    configuration_values = jsonencode({
+      tolerations = [
+        {
+          key      = "CriticalAddonsOnly"
+          operator = "Exists"
+          effect   = "NoSchedule"
+        }
+      ]
+    })
+  }
+
 }
 
 ################################################################################
@@ -175,7 +194,7 @@ module "karpenter" {
 
   cluster_name                    = module.eks.cluster_name
   node_iam_role_use_name_prefix   = false
-  node_iam_role_name              = "KarpenterNodes-${var.environment_name}"
+  node_iam_role_name              = "KarpenterNodeRole-${var.environment_name}"
   create_pod_identity_association = true
 
   tags = var.aws_tags
@@ -200,6 +219,8 @@ resource "helm_release" "karpenter" {
       clusterName: ${module.eks.cluster_name}
       clusterEndpoint: ${module.eks.cluster_endpoint}
       interruptionQueue: ${module.karpenter.queue_name}
+    featureGates:
+      spotToSpotConsolidation: true
     EOT
   ]
 

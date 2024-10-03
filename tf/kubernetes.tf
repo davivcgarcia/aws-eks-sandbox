@@ -67,21 +67,26 @@ resource "kubectl_manifest" "KarpenterNodePool" {
           - key: karpenter.sh/capacity-type
             operator: In
             values: ["on-demand", "spot"]
+          - key: karpenter.k8s.aws/instance-generation
+            operator: In
+            values: ["5", "6", "7"]
           - key: karpenter.k8s.aws/instance-category
             operator: In
             values: ["c", "m", "r"]
+          - key: karpenter.k8s.aws/instance-cpu
+            operator: In
+            values: ["1", "2", "4", "8", "16"]
         nodeClassRef:
           group: karpenter.k8s.aws
           kind: EC2NodeClass
           name: default
-        expireAfter: 720h # 30 * 24h = 720h
     limits:
-      cpu: 16
-      memory: 256Gi
+      cpu: 192
+      memory: 1024Gi
     disruption:
       consolidationPolicy: WhenEmptyOrUnderutilized
-      consolidateAfter: 1m
+      consolidateAfter: 60s
       budgets:
-      - nodes: "10%"
+      - nodes: 10% 
   EOT
 }

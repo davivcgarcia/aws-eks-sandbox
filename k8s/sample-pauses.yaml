@@ -1,0 +1,68 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: small-app
+  name: small-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: small-app
+  template:
+    metadata:
+      labels:
+        app: small-app
+    spec:
+      containers:
+      - name: small-app
+        image: registry.k8s.io/pause:3.9
+        resources:
+          requests:
+            cpu: 128m
+            memory: 128Mi
+          limits:
+            cpu: 256m
+            memory: 256Mi
+      topologySpreadConstraints:
+        - labelSelector:
+            matchLabels:
+              app: small-app
+          maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: large-app
+  name: large-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: large-app
+  template:
+    metadata:
+      labels:
+        app: large-app
+    spec:
+      containers:
+      - name: large-app
+        image: registry.k8s.io/pause:3.9
+        resources:
+          requests:
+            cpu: 1000m
+            memory: 1Gi
+          limits:
+            cpu: 2000m
+            memory: 2Gi
+      topologySpreadConstraints:
+        - labelSelector:
+            matchLabels:
+              app: large-app
+          maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway

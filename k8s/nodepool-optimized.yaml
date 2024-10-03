@@ -1,0 +1,38 @@
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: default
+spec:
+  template:
+    spec:
+      requirements:
+        - key: kubernetes.io/arch
+          operator: In
+          values: ["amd64", "arm64"] # Enable both x86-64 and ARM64
+        - key: kubernetes.io/os
+          operator: In
+          values: ["linux"]
+        - key: karpenter.sh/capacity-type # Allow Spot capacity, and fallback to on-demand if necessary
+          operator: In
+          values: ["on-demand", "spot"]
+        - key: karpenter.k8s.aws/instance-generation # Make sure we are using newer instance types
+          operator: In
+          values: ["5", "6", "7"]
+        - key: karpenter.k8s.aws/instance-category # Diversify instance family
+          operator: In
+          values: ["c", "m", "r"]
+        - key: karpenter.k8s.aws/instance-cpu # Diversify instance CPU size
+          operator: In
+          values: ["1", "2", "4", "8", "16"]
+      nodeClassRef:
+        group: karpenter.k8s.aws
+        kind: EC2NodeClass
+        name: default
+  limits:
+    cpu: 192
+    memory: 1024Gi
+  disruption:
+    consolidationPolicy: WhenEmptyOrUnderutilized # Enable cost-optimizations
+    consolidateAfter: 10s # For the sake of demonstration, to speed-up consolidaton
+    budgets:
+    - nodes: 90% # For the sake of demonstration, to speed-up consolidaton
