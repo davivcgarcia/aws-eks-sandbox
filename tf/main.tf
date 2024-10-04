@@ -62,7 +62,7 @@ module "eks" {
       resolve_conflicts = "OVERWRITE"
     }
     kube-proxy = {
-      addon_version = "v1.30.3-eksbuild.9"
+      addon_version = "v1.31.0-eksbuild.5"
       resolve_conflicts = "OVERWRITE"
     }
     vpc-cni = {
@@ -76,6 +76,15 @@ module "eks" {
     snapshot-controller = {
       addon_version = "v8.0.0-eksbuild.1"
       resolve_conflicts = "OVERWRITE"
+      configuration_values = jsonencode({
+        tolerations = [
+          {
+            key      = "CriticalAddonsOnly"
+            operator = "Exists"
+            effect   = "NoSchedule"
+          }
+        ]
+      })
     }
     eks-pod-identity-agent = {
       addon_version = "v1.3.2-eksbuild.2"
@@ -207,8 +216,8 @@ resource "helm_release" "karpenter" {
   name       = "karpenter"
   repository = "oci://public.ecr.aws/karpenter"
   chart      = "karpenter"
-  version    = "1.0.2"
-  wait       = false
+  version    = "1.0.5"
+  wait       = true
 
   values = [
     <<-EOT
