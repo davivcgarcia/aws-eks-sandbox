@@ -42,7 +42,7 @@ aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --region $EKS_CLUSTER_REGION
 1. Delete all Karpenter resources to remove EC2 Fleet instances:
 
 ```bash
-kubectl delete NodePools,EC2NodeClass
+kubectl delete NodePools,EC2NodeClass --all
 ```
 
 2. Delete all network resources to LB Controller to remove ELBs:
