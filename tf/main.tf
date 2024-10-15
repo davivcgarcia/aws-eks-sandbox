@@ -74,17 +74,8 @@ module "eks" {
       resolve_conflicts = "OVERWRITE"
     }
     snapshot-controller = {
-      addon_version = "v8.0.0-eksbuild.1"
+      addon_version = "v8.1.0-eksbuild.1"
       resolve_conflicts = "OVERWRITE"
-      configuration_values = jsonencode({
-        tolerations = [
-          {
-            key      = "CriticalAddonsOnly"
-            operator = "Exists"
-            effect   = "NoSchedule"
-          }
-        ]
-      })
     }
     eks-pod-identity-agent = {
       addon_version = "v1.3.2-eksbuild.2"
@@ -176,7 +167,7 @@ module "eks_container_insights" {
   create_cloudwatch_application_signals_role = true
 
   addon_config = {
-    addon_version = "v2.1.1-eksbuild.1"
+    addon_version = "v2.1.2-eksbuild.1"
     resolve_conflicts = "OVERWRITE"
     configuration_values = jsonencode({
       tolerations = [
